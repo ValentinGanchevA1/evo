@@ -1,4 +1,6 @@
 // src/types/navigation.ts
+import { RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 /**
  * Defines the root stack parameters, allowing type-safe navigation
@@ -11,10 +13,10 @@ export type RootStackParamList = {
 
 /**
  * Defines the screen parameters for the authentication stack navigator.
+ * REFACTOR: Removed unused 'PhoneLogin' and 'Signup' routes to match AuthNavigator.
  */
 export type AuthStackParamList = {
   Login: undefined;
-  PhoneLogin: undefined;
   Verification: { phoneNumber: string };
   ProfileSetup: undefined;
 };
@@ -25,13 +27,18 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Map: undefined;
   Profile: undefined;
+  Matches: undefined;
+  Chat: undefined;  
+  Settings: undefined;
+  Notifications: undefined;
+  Search: undefined;
 };
 
-export class AuthStackNavigationProp {
-  navigate: ((screen: keyof AuthStackParamList, params?: any) => void) | undefined;
-}
+// This provides full type-safety and intellisense with React Navigation hooks.
+export type AuthStackNavigationProp<T extends keyof AuthStackParamList> =
+  NativeStackNavigationProp<AuthStackParamList, T>;
 
-export class AuthStackRouteProp {
-  params: { phoneNumber: string; } | undefined;
-  name: keyof AuthStackParamList | undefined;
-}
+export type AuthStackRouteProp<T extends keyof AuthStackParamList> = RouteProp<
+  AuthStackParamList,
+  T
+>;

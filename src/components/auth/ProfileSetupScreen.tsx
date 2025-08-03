@@ -1,4 +1,4 @@
-// src/components/auth/ProfileSetupScreen.tsx
+// src/screens/auth/ProfileSetupScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -6,109 +6,99 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Image,
-  TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { updateUser, updateUserProfile } from "@/store/slices/userSlice.ts";
-import { AppDispatch } from "@/store/store";
-import { Input } from '../common/Input';
-import { Button } from '../common/Button';
-import { ImagePicker } from '../common/ImagePicker';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { updateCoreUser } from '@/store/slices/authSlice';
+import { updateUserProfile, uploadProfileImage } from '@/store/slices/userSlice';
+import { Input } from '@/components/common/Input';
+import { Button } from '@/components/common/Button';
+import { ImagePicker } from '@/components/common/ImagePicker';
+
+// Custom hook for unified loading state
+const useLoadingState = () => {
+  const { loading: authLoading } = useAppSelector((state) => state.auth);
+  const { loading: userLoading } = useAppSelector((state) => state.user);
+  return authLoading || userLoading;
+};
 
 export const ProfileSetupScreen: React.FC = () => {
-  const [formData, setFormData] = useState({
-    displayName: '',
-    bio: '',
-    dateOfBirth: '',
-    interests: [] as string[],
-  });
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const isLoading = useLoadingState();
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const handleUpdateField = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.displayName.trim()) {
-      Alert.alert('Required Field', 'Please enter your display name');
+  // Handles profile save logic: upload image if needed, update user data
+  const handleSaveProfile = async () => {
+    if (!displayName.trim()) {
+      Alert.alert('Display Name Required', 'Please enter how you want to be seen.');
       return;
     }
-
-    setLoading(true);
     try {
-      // Update top-level user fields
-      await dispatch(updateUser({
-        dateOfBirth: undefined,
-        gender: undefined,
-        id: "",
-        isActive: false,
-        lastSeen: undefined,
-        phoneNumber: "",
-        privacyLevel: undefined,
-        profile: undefined,
-        sexualOrientation: undefined,
-        displayName: formData.displayName,
-        profileImage: profileImage || undefined,
-      })).unwrap();
+      const profileUpdatePromises: Promise<any>[] = [];
 
-      // Update profile fields
-      await dispatch(updateUserProfile({
-        bio: formData.bio
-      })).unwrap();
+      // Upload profile image if selected
+      if (profileImageUri) {
+        profileUpdatePromises.push(dispatch(uploadProfileImage(profileImageUri)));
+      }
+      // Update core user data
+      profileUpdatePromises.push(dispatch(updateCoreUser({ displayName })));
+      // Update profile-specific data
+      if (bio.trim()) {
+        profileUpdatePromises.push(dispatch(updateUserProfile({ bio })));
+      }
 
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save profile');
-    } finally {
-      setLoading(false);
+      // Run all updates in parallel
+      await Promise.all(profileUpdatePromises.map((p) => p.unwrap()));
+      // Success feedback
+      Alert.alert('Profile Saved!', 'Welcome to the app.');
+    } catch (error: any) {
+      console.error('Profile setup failed:', error);
+      const errorMessage = typeof error === 'string' ? error : 'An unknown error occurred while saving your profile.';
+      Alert.alert('Save Failed', errorMessage);
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Complete Your Profile</Text>
-        <Text style={styles.subtitle}>
-          Help others get to know you better
-        </Text>
-      </View>
-
-      <View style={styles.form}>
-        <ImagePicker
-          value={profileImage}
-          onSelect={setProfileImage}
-          style={styles.imagePicker}
-        />
-
-        <Input
-          label="Display Name *"
-          placeholder="How should others see you?"
-          value={formData.displayName}
-          onChangeText={(value) => handleUpdateField('displayName', value)}
-          maxLength={50}
-        />
-
-        <Input
-          label="Bio"
-          placeholder="Tell us about yourself..."
-          value={formData.bio}
-          onChangeText={(value) => handleUpdateField('bio', value)}
-          multiline
-          numberOfLines={3}
-          maxLength={200}
-        />
-
-        <Button
-          title="Complete Setup"
-          onPress={handleSubmit}
-          loading={loading}
-          style={styles.button}
-        />
-      </View>
-    </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Complete Your Profile</Text>
+          <Text style={styles.subtitle}>This is how others will see you.</Text>
+        </View>
+        <View style={styles.form}>
+          <ImagePicker
+            value={profileImageUri}
+            onSelect={setProfileImageUri}
+            style={styles.imagePicker}
+          />
+          <Input
+            label="Display Name *"
+            placeholder="e.g., Jane D."
+            value={displayName}
+            onChangeText={setDisplayName}
+            maxLength={50}
+          />
+          <Input
+            label="Bio"
+            placeholder="Tell us a little about yourself..."
+            value={bio}
+            onChangeText={setBio}
+            multiline
+            numberOfLines={3}
+            maxLength={200}
+            containerStyle={styles.bioInput}
+          />
+          <Button
+            title="Save & Continue"
+            onPress={handleSaveProfile}
+            loading={isLoading}
+            style={styles.button}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -116,11 +106,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollContent: {
     paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingTop: 40,
+    paddingBottom: 30,
   },
   title: {
     fontSize: 28,
@@ -137,33 +131,14 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
   },
-  button: {
-    marginTop: 20,
-  },
-  footer: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  resendButton: {
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  resendText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  resendTextDisabled: {
-    color: '#999',
-  },
   imagePicker: {
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
+  },
+  bioInput: {
+    height: 100, // For multiline input
+  },
+  button: {
+    marginTop: 30,
   },
 });

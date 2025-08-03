@@ -1,3 +1,4 @@
+// src/components/common/Button.tsx
 import React from 'react';
 import {
   TouchableOpacity,
@@ -44,22 +45,24 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           color={variant === 'outline' ? '#007AFF' : '#fff'}
-          size=\"small\"
+          // FIX: Removed invalid escaped quotes from the size prop.
+          size="small"
         />
-        ) : (
+      ) : (
         <Text style={[
-        styles.text,
-        styles[`${variant}Text`],
-        isDisabled && styles.disabledText,
-        textStyle,
+          styles.text,
+          styles[`${variant}Text`],
+          isDisabled && styles.disabledText,
+          textStyle,
         ]}>
-      {title}
-    </Text>
-  )}
-</TouchableOpacity>
-);
+          {title}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
 };
 
+// ... styles remain the same
 const styles = StyleSheet.create({
   button: {
     height: 50,

@@ -1,93 +1,44 @@
-import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  TextInput,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native';
+// src/components/common/CodeInput.tsx
+import React from 'react';
+import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
 
-interface CodeInputProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  length: number;
-  style?: ViewStyle;
+interface CodeInputProps extends TextInputProps {
+  length?: number;
 }
 
 export const CodeInput: React.FC<CodeInputProps> = ({
-                                                      value,
-                                                      onChangeText,
-                                                      length,
-                                                      style,
+                                                      length = 6,
+                                                      ...props
                                                     }) => {
-  const inputRefs = useRef<(TextInput | null)[]>([]);
-
-  useEffect(() => {
-    if (value.length === 0) {
-      inputRefs.current[0]?.focus();
-    }
-  }, []);
-
-  const handleTextChange = (text: string, index: number) => {
-    const newValue = value.split('');
-    newValue[index] = text;
-
-    const result = newValue.join('').slice(0, length);
-    onChangeText(result);
-
-    // Auto-focus next input
-    if (text && index < length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (key: string, index: number) => {
-    if (key === 'Backspace' && !value[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
   return (
-    <View style={[styles.container, style]}>
-      {Array.from({ length }, (_, index) => (
-        <TextInput
-          key={index}
-          ref={(ref) => (inputRefs.current[index] = ref)}
-          style={[
-            styles.input,
-            value[index] && styles.inputFilled,
-          ]}
-          value={value[index] || ''}
-          onChangeText={(text) => handleTextChange(text, index)}
-          onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
-          keyboardType=\"numeric\"
-        maxLength={1}
-        textAlign=\"center\"
-        selectTextOnFocus
-        />
-        ))}
+    <View style={styles.container}>
+      <TextInput
+        style={styles.input}
+        maxLength={length}
+        keyboardType="number-pad"
+        textContentType="oneTimeCode"
+        autoFocus
+        {...props}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 20,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
-    width: 45,
-    height: 55,
-    borderWidth: 2,
-    borderColor: '#ddd',
-    borderRadius: 12,
+    height: 60,
+    width: '90%',
     fontSize: 24,
     fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 15, // Creates visual separation for digits
+    borderBottomWidth: 2,
+    borderColor: '#ddd',
     color: '#333',
-    backgroundColor: '#fff',
-  },
-  inputFilled: {
-    borderColor: '#007AFF',
-    backgroundColor: '#F0F8FF',
   },
 });

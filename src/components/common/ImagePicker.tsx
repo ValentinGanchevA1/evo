@@ -1,125 +1,86 @@
-import React, { useState } from 'react';
+// src/components/common/ImagePicker.tsx
+import React from 'react';
 import {
   View,
-  TouchableOpacity,
   Image,
-  Text,
+  TouchableOpacity,
   StyleSheet,
   Alert,
   ViewStyle,
 } from 'react-native';
-import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker';
 
 interface ImagePickerProps {
   value: string | null;
-  onSelect: (imageUri: string | null) => void;
+  onSelect: (uri: string | null) => void;
   style?: ViewStyle;
-  size?: number;
 }
 
-export const ImagePicker: React.FC<ImagePickerProps> = ({
-                                                          value,
-                                                          onSelect,
-                                                          style,
-                                                          size = 120,
-                                                        }) => {
-  const [loading, setLoading] = useState(false);
+export const ImagePicker: React.FC<ImagePickerProps> = ({ value, onSelect, style }) => {
+  const handleSelectImage = () => {
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo',
+      quality: 0.7,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    };
 
-  const handleImagePicker = () => {
-    Alert.alert(
-      'Select Photo',
-      'Choose how you want to select a photo',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Photo Library', onPress: openImageLibrary },
-        { text: 'Remove Photo', onPress: () => onSelect(null), style: 'destructive' },
-      ]
-    );
-  };
-
-  const openImageLibrary = () => {
-    setLoading(true);
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        quality: 0.8,
-        maxWidth: 800,
-        maxHeight: 800,
-      },
-      (response: ImagePickerResponse) => {
-        setLoading(false);
-
-        if (response.didCancel || response.errorMessage) {
-          return;
-        }
-
-        if (response.assets && response.assets[0]) {
-          onSelect(response.assets[0].uri || null);
-        }
+    launchImageLibrary(options, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        Alert.alert('Error', response.errorMessage || 'Could not select image.');
+      } else if (response.assets && response.assets[0].uri) {
+        onSelect(response.assets[0].uri);
       }
-    );
+    });
   };
-
-  const containerSize = { width: size, height: size };
 
   return (
-    <TouchableOpacity
-      style={[styles.container, containerSize, style]}
-      onPress={handleImagePicker}
-      disabled={loading}
-    >
+    <TouchableOpacity onPress={handleSelectImage} style={[styles.container, style]}>
       {value ? (
-        <Image source={{ uri: value }} style={[styles.image, containerSize]} />
+        <Image source={{ uri: value }} style={styles.image} />
       ) : (
-        <View style={[styles.placeholder, containerSize]}>
-          <Text style={styles.placeholderText}>+</Text>
-          <Text style={styles.addText}>Add Photo</Text>
+        <View style={styles.placeholder}>
+          <Icon name="camera" size={40} color="#999" />
         </View>
       )}
-      {loading && (
-        <View style={[styles.loading, containerSize]}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      )}
+      <View style={styles.editIconContainer}>
+        <Icon name="pencil" size={20} color="#fff" />
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    width: 120,
+    height: 120,
     borderRadius: 60,
-    overflow: 'hidden',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e9ecef',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#ddd',
-    borderStyle: 'dashed',
+    borderColor: '#ced4da',
   },
   image: {
+    width: '100%',
+    height: '100%',
     borderRadius: 60,
   },
   placeholder: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
   },
-  placeholderText: {
-    fontSize: 32,
-    color: '#999',
-    fontWeight: '300',
-  },
-  addText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  loading: {
+  editIconContainer: {
     position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-  },
-  loadingText: {
-    fontSize: 12,
-    color: '#666',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#007AFF',
+    borderRadius: 15,
+    padding: 5,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
 });

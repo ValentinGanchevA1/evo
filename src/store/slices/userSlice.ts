@@ -81,6 +81,22 @@ export const updatePreferences = createAsyncThunk(
   },
 );
 
+// GEN: Add a dedicated thunk for uploading the profile image.
+// This encapsulates the API call and provides clear pending/fulfilled/rejected states.
+export const uploadProfileImage = createAsyncThunk(
+  'user/uploadProfileImage',
+  async (imageUri: string, { rejectWithValue }) => {
+    try {
+      const response = await userService.uploadProfileImage(imageUri);
+      // The returned URL will be the action payload.
+      return response.data.imageUrl;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to upload image');
+    }
+  },
+);
+
+
 // =================================================================
 // Slice
 // =================================================================
@@ -89,7 +105,6 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    // REFACTOR: Replaced `updateProfileField` with a more type-safe reducer.
     updateLocalProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
       if (state.profile) {
         state.profile = { ...state.profile, ...action.payload };
@@ -110,7 +125,6 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fulfilled states
       .addCase(
         fetchUserProfile.fulfilled,
         (state, action: PayloadAction<UserProfile>) => {
@@ -120,17 +134,14 @@ const userSlice = createSlice({
       .addCase(
         updateUserProfile.fulfilled,
         (state, action: PayloadAction<Partial<UserProfile>>) => {
-          // FIX: Safely handles merging into a potentially null profile state.
           state.profile = { ...(state.profile || {}), ...action.payload } as UserProfile;
         },
       )
       .addCase(updatePreferences.fulfilled, (state, action) => {
         state.preferences = { ...state.preferences, ...action.payload };
       })
-
-      // REFACTOR: Use `addMatcher` to handle common pending/rejected states concisely.
       .addMatcher(
-        isAnyOf(fetchUserProfile.pending, updateUserProfile.pending),
+        isAnyOf(fetchUserProfile.pending, updateUserProfile.pending, uploadProfileImage.pending),
         (state) => {
           state.loading = true;
           state.error = null;
@@ -141,18 +152,19 @@ const userSlice = createSlice({
           fetchUserProfile.rejected,
           updateUserProfile.rejected,
           updatePreferences.rejected,
+          uploadProfileImage.rejected,
         ),
         (state, action) => {
           state.loading = false;
           state.error = action.payload as string;
         },
       )
-      // A final matcher to turn off loading for any fulfilled action.
       .addMatcher(
         isAnyOf(
           fetchUserProfile.fulfilled,
           updateUserProfile.fulfilled,
           updatePreferences.fulfilled,
+          uploadProfileImage.fulfilled,
         ),
         (state) => {
           state.loading = false;
@@ -169,3 +181,6 @@ export const {
 } = userSlice.actions;
 
 export default userSlice.reducer;
+
+// FIX: Removed invalid and erroneous class export.
+// export class updateUser { ... }

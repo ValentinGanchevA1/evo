@@ -14,31 +14,53 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { registerUser, clearError } from '@/store/slices/authSlice';
-import { AuthStackParamList } from '@/types.ts';
+import {clearError } from '@/store/slices/authSlice';
+import { AuthStackParamList } from "@/types/auth";
 
-type SignupScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
 
-/**
- * The SignupScreen allows new users to create an account.
- * It handles form input for username, email, and password.
- */
+const SIGNUP_PLACEHOLDER_USERNAME = "Username";
+const SIGNUP_PLACEHOLDER_EMAIL = "Email";
+const SIGNUP_PLACEHOLDER_PASSWORD = "Password";
+const BUTTON_TITLE_SIGNUP = "Sign Up";
+const TITLE_TEXT = "Create Account";
+const SUBTITLE_TEXT = "Join the Cyberealm community";
+const ALREADY_HAVE_ACCOUNT_TEXT = "Already have an account?";
+const LOG_IN_TEXT = "Log In";
+
+// Helper function to render input fields
+const InputField = (
+  placeholder: string,
+  value: string,
+  onChange: (text: string) => void,
+  secureTextEntry = false,
+  keyboardType?: 'default' | 'email-address'
+) => (
+  <TextInput
+    style={styles.input}
+    placeholder={placeholder}
+    value={value}
+    onChangeText={onChange}
+    secureTextEntry={secureTextEntry}
+    keyboardType={keyboardType}
+    autoCapitalize="none"
+    placeholderTextColor="#888"
+  />
+);
+
 const SignupScreen: React.FC = () => {
   const navigation = useNavigation<SignupScreenNavigationProp>();
   const dispatch = useAppDispatch();
-
   const { isLoading, error } = useAppSelector((state) => state.auth);
-
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Clear any previous errors when the component mounts
+  // Clear error on mount
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
 
-  const handleSignup = () => {
+  const onSignupPress = () => {
     if (username && email && password) {
       dispatch(registerUser({ username, email, password }));
     }
@@ -50,41 +72,19 @@ const SignupScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join the Cyberealm community</Text>
+        <Text style={styles.title}>{TITLE_TEXT}</Text>
+        <Text style={styles.subtitle}>{SUBTITLE_TEXT}</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-          placeholderTextColor="#888"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholderTextColor="#888"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholderTextColor="#888"
-        />
+        {InputField(SIGNUP_PLACEHOLDER_USERNAME, username, setUsername)}
+        {InputField(SIGNUP_PLACEHOLDER_EMAIL, email, setEmail, false, 'email-address')}
+        {InputField(SIGNUP_PLACEHOLDER_PASSWORD, password, setPassword, true)}
 
         {isLoading ? (
           <ActivityIndicator size="large" color="#007AFF" style={styles.button} />
         ) : (
           <Button
-            title="Sign Up"
-            onPress={handleSignup}
+            title={BUTTON_TITLE_SIGNUP}
+            onPress={onSignupPress}
             disabled={!username || !email || !password}
           />
         )}
@@ -92,9 +92,9 @@ const SignupScreen: React.FC = () => {
         {error && <Text style={styles.errorText}>{error.message}</Text>}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account?</Text>
+          <Text style={styles.footerText}>{ALREADY_HAVE_ACCOUNT_TEXT}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>Log In</Text>
+            <Text style={styles.linkText}>{LOG_IN_TEXT}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

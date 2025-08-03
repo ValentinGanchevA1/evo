@@ -1,10 +1,6 @@
+// src/services/authService.ts - FIXED VERSION
 import { apiClient } from './api';
-import { LoginCredentials, SignupData, User } from "@/types";
-
-interface AuthResponse {
-  user: User;
-  token: string;
-}
+import { LoginCredentials, SignupData, AuthResponse } from '@/types';
 
 export const authService = {
   async sendVerificationCode(phoneNumber: string): Promise<{ success: boolean }> {
@@ -12,11 +8,13 @@ export const authService = {
     return response.data;
   },
 
+  // FIXED: Return consistent AuthResponse interface
   async loginWithPhone(credentials: LoginCredentials): Promise<{ data: AuthResponse }> {
     const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
     return { data: response.data };
   },
 
+  // FIXED: Return consistent AuthResponse interface
   async signup(userData: SignupData): Promise<{ data: AuthResponse }> {
     const response = await apiClient.post<AuthResponse>('/auth/signup', userData);
     return { data: response.data };

@@ -1,4 +1,4 @@
-// src/components/auth/VerificationScreen.tsx
+// src/screens/auth/VerificationScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -24,7 +24,6 @@ import {
 } from '@/types/navigation';
 import { Button } from '@/components/common/Button';
 import { CodeInput } from '@/components/common/CodeInput';
-import { AuthResponseData } from '@/types';
 
 export const VerificationScreen: React.FC = () => {
   const [code, setCode] = useState('');

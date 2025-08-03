@@ -7,7 +7,7 @@ const API_BASE_URL = __DEV__
   : 'https://your-prod-api.com/api';
 
 class ApiClient {
-  private client: AxiosInstance;
+  private readonly client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
@@ -51,7 +51,7 @@ class ApiClient {
     return this.client.get(url, { params });
   }
 
-  public post<T = any>(url: string, data?: any): Promise<AxiosResponse<T>> {
+  public post<T = any>(url: string, data?: any, p0?: { headers: { 'Content-Type': string; }; }): Promise<AxiosResponse<T>> {
     return this.client.post(url, data);
   }
 

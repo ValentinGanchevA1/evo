@@ -1,25 +1,17 @@
+// src/types/index.ts - FIXED VERSION
 // =================================================================
 // Core Data Models
 // =================================================================
 
-/**
- * Represents a user's profile settings, preferences, and bio.
- * This is separated for better data organization.
- */
 export interface UserProfile {
   bio?: string;
   interests?: string[];
   lookingFor?: ('dating' | 'friendship' | 'trading' | 'events')[];
-  // Search/matching preferences
   ageMin?: number;
   ageMax?: number;
-  maxDistance?: number; // Should be a consistent unit, e.g., kilometers
+  maxDistance?: number;
 }
 
-/**
- * Represents the core user object in the application.
- * It contains identity, status, and privacy info, and can include a profile.
- */
 export interface User {
   id: string;
   phoneNumber: string;
@@ -29,15 +21,11 @@ export interface User {
   gender?: 'male' | 'female' | 'other';
   sexualOrientation?: 'straight' | 'gay' | 'lesbian' | 'bisexual' | 'other';
   isActive: boolean;
-  // e.g., 1: Public, 2: Friends, 3: Private
   privacyLevel: 1 | 2 | 3;
   lastSeen: Date;
   profile?: UserProfile;
 }
 
-/**
- * Represents a user's geographic location at a point in time.
- */
 export interface UserLocation {
   id: string;
   userId: string;
@@ -48,42 +36,39 @@ export interface UserLocation {
   isCurrent: boolean;
 }
 
-// =================================================================
-// API Payloads & Service Types
-// =================================================================
-
-/**
- * Credentials required for phone-based login, used by auth services.
- */
-export interface LoginCredentials {
-  phoneNumber: string;
-  otp?: string; // Optional one-time password
-}
-
-/**
- * The shape of the data returned from the API upon successful authentication.
- */
-export interface AuthResponseData {
-  user: User;
-  token: string;
-}
-
-/**
- * Represents the status of location permissions granted by the user.
- * (Merged from the redundant location.ts file).
- */
 export interface LocationPermission {
   granted: boolean;
   type: 'whenInUse' | 'always' | 'denied';
 }
 
 // =================================================================
-// Redux State Slice Definitions
+// API & Auth Types - CONSOLIDATED
 // =================================================================
 
-/**
- * The shape of the authentication state within the Redux store.
- */
+export interface LoginCredentials {
+  phoneNumber: string;
+  verificationCode: string; // Made required for consistency
+}
+
+export interface SignupData {
+  phoneNumber: string;
+  displayName: string;
+  dateOfBirth: Date;
+}
+
+// FIXED: Single consistent auth response interface
+export interface AuthResponse {
+  user: User;
+  token: string;
+  isNewUser: boolean; // Added missing property
+}
+
+// Remove duplicate AuthResponseData - use AuthResponse instead
+
+// =================================================================
+// Redux State Types
+// =================================================================
+
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
@@ -92,12 +77,9 @@ export interface AuthState {
   error: string | null;
 }
 
-/**
- * Represents a user found nearby, tailored for map display.
- */
 export interface NearbyUser {
   id: string;
-  displayName: string;
+  displayName: string; // Changed from username for consistency
   latitude: number;
   longitude: number;
   distance: number;
@@ -105,9 +87,6 @@ export interface NearbyUser {
   profileImage?: string;
 }
 
-/**
- * The shape of the location-related state within the Redux store.
- */
 export interface LocationState {
   currentLocation: Omit<UserLocation, 'id' | 'userId'> | null;
   nearbyUsers: NearbyUser[];
@@ -116,5 +95,7 @@ export interface LocationState {
   error: string | null;
 }
 
-export class SignupData {
-}
+// =================================================================
+// Navigation Types - Import from separate file
+// =================================================================
+export * from './navigation';

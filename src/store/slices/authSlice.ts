@@ -5,35 +5,36 @@ import {
   PayloadAction,
   isAnyOf,
 } from '@reduxjs/toolkit';
-import { AuthState, User, LoginCredentials, AuthResponseData } from '@/types';
+import { AuthState, User, LoginCredentials, AuthResponse } from '@/types';
 import { authService } from '@/services/authService';
 import { userService } from '@/services/userService';
-// FIX: Use a named import for the thunk, not a default import.
 import { uploadProfileImage } from '@/store/slices/userSlice';
+import { RootState } from '@/store/store'; // GEN: Import RootState for thunk typing
 
-interface ThunkActionConfig {
-  rejectWithValue: (value: string) => any;
-  state: { auth: AuthState };
-}
-const initialState: AuthState = {
-  isAuthenticated: false,
-  user: null,
-  token: null,
-  loading: false,
-  error: null,
+// =================================================================
+// Types
+// =================================================================
+
+/**
+ * REFACTOR: Standardized thunk configuration for consistent type safety.
+ * This defines the shape of the `thunkAPI` object for all thunks in this slice.
+ */
+type AuthThunkConfig = {
+  state: RootState;
+  rejectValue: string;
 };
 
 // =================================================================
 // Thunks
-// =============================t the import path accordingly
+// =================================================================
 
 export const sendVerificationCode = createAsyncThunk<
-  { phoneNumber: string },
-  string,
-  ThunkActionConfig
+  { phoneNumber: string }, // Return type
+  string, // Argument type
+  AuthThunkConfig // Thunk config type
 >(
   'auth/sendVerificationCode',
-  async (phoneNumber: string, { rejectWithValue }) => {
+  async (phoneNumber, { rejectWithValue }) => {
     try {
       const response = await authService.sendVerificationCode(phoneNumber);
       if (response.success) {
@@ -44,17 +45,13 @@ export const sendVerificationCode = createAsyncThunk<
       return rejectWithValue(error.message || 'An unknown error occurred.');
     }
   },
-  // pass the config
-  { rejectWithValue, state: { auth: initialState } }
+  // FIX: The third argument was an invalid syntax error and has been removed.
 );
 
-
-// REFACTOR: The login thunk is now correctly implemented.
-// It accepts the verification code and calls the correct service method.
 export const loginWithPhone = createAsyncThunk<
-  AuthResponseData & { isNewUser?: boolean },
+  AuthResponse & { isNewUser?: boolean },
   LoginCredentials,
-  { rejectWithValue: (value: string) => any }
+  AuthThunkConfig
 >('auth/loginWithPhone', async (credentials, { rejectWithValue }) => {
   try {
     const response = await authService.loginWithPhone(credentials);
@@ -64,23 +61,32 @@ export const loginWithPhone = createAsyncThunk<
   }
 });
 
+export const updateCoreUser = createAsyncThunk<
+  Partial<User>,
+  Partial<User>,
+  AuthThunkConfig
+>('auth/updateCoreUser', async (userData, { rejectWithValue }) => {
+  try {
+    const response = await userService.updateUser(userData);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.message || 'Failed to update user data');
+  }
+});
 
-
-export const updateCoreUser = createAsyncThunk(
-  'auth/updateCoreUser',
-  async (userData: Partial<User>, { rejectWithValue }) => {
+export const logout = createAsyncThunk<void, void, AuthThunkConfig>(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await userService.updateUser(userData);
-      return response.data;
+      await authService.logout();
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to update user data');
+      // Even if logout API fails, we should clear client state.
+      // But we can still log the error.
+      console.error('Logout failed on server:', error);
+      // We don't reject here because the client-side logout should always succeed.
     }
   },
 );
-
-export const logout = createAsyncThunk('auth/logout', async () => {
-  await authService.logout();
-});
 
 // =================================================================
 // Slice
@@ -104,37 +110,32 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Handle successful login
+      // Handle specific fulfilled cases
       .addCase(loginWithPhone.fulfilled, (state, action) => {
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
       })
-      // Handle successful core user update
-      .addCase(
-        updateCoreUser.fulfilled,
-        (state, action: PayloadAction<Partial<User>>) => {
-          if (state.user) {
-            state.user = { ...state.user, ...action.payload };
-          }
-        },
-      )
-      // Handle image upload from userSlice
+      .addCase(updateCoreUser.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user = { ...state.user, ...action.payload };
+        }
+      })
       .addCase(uploadProfileImage.fulfilled, (state, action) => {
         if (state.user && action.payload) {
           state.user.profileImage = action.payload;
         }
       })
-      // Handle logout
-      .addCase(logout.fulfilled, (state) => {
-        Object.assign(state, initialState, { isAuthenticated: false, loading: false });
-      })
-      // Use `addMatcher` to handle common cases for all auth thunks.
+      // REFACTOR: On logout, returning initialState is the most robust way to reset.
+      .addCase(logout.fulfilled, () => initialState)
+
+      // REFACTOR: Use `addMatcher` to handle common states for all thunks concisely.
       .addMatcher(
         isAnyOf(
           sendVerificationCode.pending,
           loginWithPhone.pending,
           updateCoreUser.pending,
+          logout.pending, // GEN: Added logout to pending matcher
         ),
         (state) => {
           state.loading = true;
@@ -156,6 +157,7 @@ const authSlice = createSlice({
           sendVerificationCode.rejected,
           loginWithPhone.rejected,
           updateCoreUser.rejected,
+          logout.rejected, // GEN: Added logout to rejected matcher
         ),
         (state, action) => {
           state.loading = false;

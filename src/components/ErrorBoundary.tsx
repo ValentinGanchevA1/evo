@@ -1,6 +1,6 @@
 // src/components/ErrorBoundary.tsx
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface Props {
   children: ReactNode;

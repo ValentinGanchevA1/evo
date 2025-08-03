@@ -1,7 +1,7 @@
 // src/store/slices/locationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { LocationState, UserLocation, NearbyUser } from "@/types";
-import { locationService } from "@/services/locationService.ts";
+import { locationService } from "@/services/locationService";
 
 const initialState: LocationState = {
   currentLocation: null,

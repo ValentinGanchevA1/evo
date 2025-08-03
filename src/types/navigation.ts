@@ -17,6 +17,7 @@ export type RootStackParamList = {
  */
 export type AuthStackParamList = {
   Login: undefined;
+  PhoneLogin: undefined;
   Verification: { phoneNumber: string };
   ProfileSetup: undefined;
 };
@@ -28,7 +29,7 @@ export type MainTabParamList = {
   Map: undefined;
   Profile: undefined;
   Matches: undefined;
-  Chat: undefined;  
+  Chat: undefined;
   Settings: undefined;
   Notifications: undefined;
   Search: undefined;

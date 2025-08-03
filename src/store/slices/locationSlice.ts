@@ -1,7 +1,7 @@
 // src/store/slices/locationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { LocationState, UserLocation, NearbyUser } from "../../types";
-import { locationService } from '../../services/locationService';
+import { LocationState, UserLocation, NearbyUser } from "@/types";
+import { locationService } from "@/services/locationService.ts";
 
 const initialState: LocationState = {
   currentLocation: null,
@@ -43,12 +43,22 @@ const locationSlice = createSlice({
   name: 'location',
   initialState,
   reducers: {
-    updateLocation: (state, action: PayloadAction<Omit<UserLocation, 'id' | 'userId'>>) => {
-      state.currentLocation = {
-        id: Date.now().toString(),
-        userId: '', // Will be set by middleware
-        ...action.payload,
+    updateLocation: (
+      state,
+      action: PayloadAction<Omit<UserLocation, "id" | "userId">>
+    ) => {
+      // Generate a unique location ID
+      const locationId = Date.now().toString();
+
+      // Construct new location object with current timestamp
+      const newLocation: UserLocation = {
+        id: locationId,
+        userId: "", // Will be set by middleware
+        ...action.payload
       };
+
+      // Update the state with the new location and timestamp
+      state.currentLocation = newLocation;
       state.lastUpdate = new Date();
       state.error = null;
     },

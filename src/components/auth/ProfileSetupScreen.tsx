@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { updateUserProfile } from '../../store/slices/userSlice';
-import { AppDispatch } from '../../store/store';
+import { updateUser, updateUserProfile } from "@/store/slices/userSlice.ts";
+import { AppDispatch } from "@/store/store";
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { ImagePicker } from '../common/ImagePicker';
@@ -40,14 +40,28 @@ export const ProfileSetupScreen: React.FC = () => {
 
     setLoading(true);
     try {
+      // Update top-level user fields
+      await dispatch(updateUser({
+        dateOfBirth: undefined,
+        gender: undefined,
+        id: "",
+        isActive: false,
+        lastSeen: undefined,
+        phoneNumber: "",
+        privacyLevel: undefined,
+        profile: undefined,
+        sexualOrientation: undefined,
+        displayName: formData.displayName,
+        profileImage: profileImage || undefined,
+      })).unwrap();
+
+      // Update profile fields
       await dispatch(updateUserProfile({
-        ...formData,
-        profileImage,
-      }));
-      // Profile setup complete - navigation handled by auth state
+        bio: formData.bio
+      })).unwrap();
+
     } catch (error) {
-      Alert.alert('Error', 'Failed to save profile. Please try again.');
-      console.error('Profile setup error:', error);
+      Alert.alert('Error', 'Failed to save profile');
     } finally {
       setLoading(false);
     }

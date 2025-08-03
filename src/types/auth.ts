@@ -19,3 +19,4 @@ export interface SignupData {
   displayName: string;
   dateOfBirth: Date;
 }
+

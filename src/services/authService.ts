@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import { LoginCredentials, SignupData, User } from '../types';
+import { LoginCredentials, SignupData, User } from "@/types";
 
 interface AuthResponse {
   user: User;

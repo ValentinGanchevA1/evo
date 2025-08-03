@@ -14,6 +14,8 @@ export type RootStackParamList = {
  */
 export type AuthStackParamList = {
   Login: undefined;
+  PhoneLogin: undefined;
+  Verification: { phoneNumber: string };
   ProfileSetup: undefined;
 };
 
@@ -24,3 +26,12 @@ export type MainTabParamList = {
   Map: undefined;
   Profile: undefined;
 };
+
+export class AuthStackNavigationProp {
+  navigate: ((screen: keyof AuthStackParamList, params?: any) => void) | undefined;
+}
+
+export class AuthStackRouteProp {
+  params: { phoneNumber: string; } | undefined;
+  name: keyof AuthStackParamList | undefined;
+}

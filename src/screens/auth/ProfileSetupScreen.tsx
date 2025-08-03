@@ -7,8 +7,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useAppDispatch } from './../../hooks';
-import { setUser } from './store/slices/authSlice'; // Assuming an action to update user
+import { useAppDispatch } from "@/store/hooks";
 
 /**
  * A placeholder screen for new users to set up their profile

@@ -1,7 +1,8 @@
 // src/store/slices/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { AuthState, User, LoginCredentials } from '../../types';
-import { authService } from '../../services/authService';
+import { AuthState, User, LoginCredentials } from "@/types";
+import { authService } from "@/services/authService.ts";
+import { uploadProfileImage } from "@/store/slices/userSlice.ts";
 
 const initialState: AuthState = {
   isAuthenticated: false,
@@ -33,6 +34,11 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
+    setUserField: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -50,6 +56,11 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Login failed';
       })
+      .addCase(uploadProfileImage.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.profileImage = action.payload;
+        }
+      })
       .addCase(logout.fulfilled, (state) => {
         state.isAuthenticated = false;
         state.user = null;
@@ -60,3 +71,6 @@ const authSlice = createSlice({
 
 export const { clearError, setUser } = authSlice.actions;
 export default authSlice.reducer;
+
+export class sendVerificationCode {
+}

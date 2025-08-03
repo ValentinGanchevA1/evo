@@ -2,7 +2,7 @@
 import Geolocation from '@react-native-community/geolocation';
 import { apiClient } from './api';
 import { socketService } from './socketService';
-import { UserLocation, NearbyUser } from '../types';
+import { UserLocation, NearbyUser } from "@/types";
 
 interface LocationUpdateCallback {
   (location: Omit<UserLocation, 'id' | 'userId'>): void;

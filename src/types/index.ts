@@ -115,3 +115,6 @@ export interface LocationState {
   lastUpdate: Date | null;
   error: string | null;
 }
+
+export class SignupData {
+}

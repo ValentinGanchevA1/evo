@@ -11,8 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { loginWithPhone } from '.store/slices/authSlice';
-import { clearError } from './store/slices/authSlice';
+import { loginWithPhone, clearError } from "@/store/slices/authSlice.ts";
+
 
 /**
  * The PhoneLoginScreen allows users to enter their phone number to authenticate.

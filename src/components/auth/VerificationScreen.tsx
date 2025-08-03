@@ -9,10 +9,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAuth } from '../../hooks/useAuth';
-import { AuthStackNavigationProp, AuthStackRouteProp } from '../../types/navigation.ts';
+import { useAuth } from "@/hooks/useAuth.ts";
+import { AuthStackNavigationProp, AuthStackRouteProp } from "@/types/navigation.ts";
 import { Button } from '../common/Button';
 import { CodeInput } from '../common/CodeInput';
+import { authService } from "@/services/authService.ts";
 
 export const VerificationScreen: React.FC = () => {
   const [code, setCode] = useState('');
@@ -58,7 +59,7 @@ export const VerificationScreen: React.FC = () => {
   const handleResendCode = async () => {
     setResendLoading(true);
     try {
-      // Implement resend logic
+      await authService.sendVerificationCode(phoneNumber);
       setTimer(60);
       Alert.alert('Code Sent', 'A new verification code has been sent');
     } catch (error) {

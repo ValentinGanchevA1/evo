@@ -1,0 +1,10 @@
+{
+  "extends": "@react-native/typescript-config",
+  // Add compilerOptions to make TypeScript and VSCode understand the '@/' alias
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}

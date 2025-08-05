@@ -2,67 +2,49 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  Button,
   StyleSheet,
-  ActivityIndicator,
   TouchableOpacity,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {clearError } from '@/store/slices/authSlice';
-import { AuthStackParamList } from "@/types/auth";
-
-
-const SIGNUP_PLACEHOLDER_USERNAME = "Username";
-const SIGNUP_PLACEHOLDER_EMAIL = "Email";
-const SIGNUP_PLACEHOLDER_PASSWORD = "Password";
-const BUTTON_TITLE_SIGNUP = "Sign Up";
-const TITLE_TEXT = "Create Account";
-const SUBTITLE_TEXT = "Join the Cyberealm community";
-const ALREADY_HAVE_ACCOUNT_TEXT = "Already have an account?";
-const LOG_IN_TEXT = "Log In";
-
-// Helper function to render input fields
-const InputField = (
-  placeholder: string,
-  value: string,
-  onChange: (text: string) => void,
-  secureTextEntry = false,
-  keyboardType?: 'default' | 'email-address'
-) => (
-  <TextInput
-    style={styles.input}
-    placeholder={placeholder}
-    value={value}
-    onChangeText={onChange}
-    secureTextEntry={secureTextEntry}
-    keyboardType={keyboardType}
-    autoCapitalize="none"
-    placeholderTextColor="#888"
-  />
-);
+import { registerUser, clearError } from '@/store/slices/authSlice';
+import { AuthStackNavigationProp } from '@/types/navigation';
+import { Input } from '@/components/common/Input';
+import { Button } from '@/components/common/Button';
 
 const SignupScreen: React.FC = () => {
-  const navigation = useNavigation<SignupScreenNavigationProp>();
+  type SignupNavigationProp = AuthStackNavigationProp<'Signup'>;
+  const navigation = useNavigation<SignupNavigationProp>();
   const dispatch = useAppDispatch();
-  const { isLoading, error } = useAppSelector((state) => state.auth);
+  const { loading, error } = useAppSelector((state) => state.auth);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Clear error on mount
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
 
-  const onSignupPress = () => {
+  const handleSignup = async () => {
     if (username && email && password) {
-      dispatch(registerUser({ username, email, password }));
+      try {
+        const result = await dispatch(
+          registerUser({ username, email, password }),
+        ).unwrap();
+
+        // On success, the RootNavigator will handle the switch to the Main stack.
+        // If the user is new (which they always will be on signup),
+        // navigate them to complete their profile.
+        if (result.isNewUser) {
+          navigation.navigate('ProfileSetup');
+        }
+      } catch (rejectedValue) {
+        Alert.alert('Signup Failed', rejectedValue as string);
+      }
     }
   };
 
@@ -72,29 +54,47 @@ const SignupScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        <Text style={styles.title}>{TITLE_TEXT}</Text>
-        <Text style={styles.subtitle}>{SUBTITLE_TEXT}</Text>
+        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Join the community</Text>
 
-        {InputField(SIGNUP_PLACEHOLDER_USERNAME, username, setUsername)}
-        {InputField(SIGNUP_PLACEHOLDER_EMAIL, email, setEmail, false, 'email-address')}
-        {InputField(SIGNUP_PLACEHOLDER_PASSWORD, password, setPassword, true)}
+        <Input
+          label="Username"
+          placeholder="Choose a unique username"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+        <Input
+          label="Email"
+          placeholder="you@example.com"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <Input
+          label="Password"
+          placeholder="Create a secure password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+        />
 
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={styles.button} />
-        ) : (
-          <Button
-            title={BUTTON_TITLE_SIGNUP}
-            onPress={onSignupPress}
-            disabled={!username || !email || !password}
-          />
-        )}
+        <Button
+          title="Sign Up"
+          onPress={handleSignup}
+          loading={loading}
+          disabled={!username || !email || !password}
+          style={styles.button}
+        />
 
-        {error && <Text style={styles.errorText}>{error.message}</Text>}
+        {error && !loading && <Text style={styles.errorText}>{error}</Text>}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>{ALREADY_HAVE_ACCOUNT_TEXT}</Text>
+          <Text style={styles.footerText}>Already have an account?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>{LOG_IN_TEXT}</Text>
+            <Text style={styles.linkText}>Log In</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -102,7 +102,6 @@ const SignupScreen: React.FC = () => {
   );
 };
 
-// Using the same styles as LoginScreen for consistency
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f8f9fa' },
   container: {
@@ -123,19 +122,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     color: '#6c757d',
   },
-  input: {
-    height: 50,
-    borderColor: '#ced4da',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    backgroundColor: '#fff',
-    fontSize: 16,
-  },
   button: {
-    height: 50,
-    justifyContent: 'center',
+    marginTop: 10,
   },
   errorText: {
     color: '#d9534f',

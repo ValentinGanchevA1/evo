@@ -55,6 +55,36 @@ export interface SignupData {
   displayName: string;
   dateOfBirth: Date;
 }
+// src/types/index.ts - FIXED VERSION
+// =================================================================
+// Core Data Models
+// =================================================================
+
+export interface LocationPermission {
+  granted: boolean;
+  type: 'whenInUse' | 'always' | 'denied';
+}
+
+// =================================================================
+// API & Auth Types - CONSOLIDATED
+// =================================================================
+
+export interface LoginCredentials {
+  phoneNumber: string;
+  verificationCode: string; // Made required for consistency
+}
+
+export interface SignupData {
+  phoneNumber: string;
+  displayName: string;
+  dateOfBirth: Date;
+}
+
+export interface RegistrationData {
+  username: string;
+  email: string;
+  password: string;
+}
 
 // FIXED: Single consistent auth response interface
 export interface AuthResponse {
@@ -62,8 +92,6 @@ export interface AuthResponse {
   token: string;
   isNewUser: boolean; // Added missing property
 }
-
-// Remove duplicate AuthResponseData - use AuthResponse instead
 
 // =================================================================
 // Redux State Types

@@ -14,6 +14,7 @@ import { updateUserProfile, uploadProfileImage } from '@/store/slices/userSlice'
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { ImagePicker } from '@/components/common/ImagePicker';
+import { AsyncThunkAction } from '@reduxjs/toolkit';
 
 // Custom hook for unified loading state
 const useLoadingState = () => {
@@ -35,8 +36,7 @@ export const ProfileSetupScreen: React.FC = () => {
       return;
     }
     try {
-      // The use of ReturnType here is a great way to ensure type safety
-      const profileUpdatePromises: ReturnType<typeof dispatch>[] = [];
+      const profileUpdatePromises: AsyncThunkAction<any, any, any>[] = [];
 
       if (profileImageUri) {
         profileUpdatePromises.push(dispatch(uploadProfileImage(profileImageUri)));

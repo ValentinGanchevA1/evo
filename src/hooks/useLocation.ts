@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Geolocation from '@react-native-community/geolocation';
 import { AppDispatch, RootState } from '../store/store';
-import { updateLocation } from '../store/slices/locationSlice';
-import { UserLocation, LocationPermission } from '../types';
+import  updateLocation  from '../store/slices/locationSlice';
+import { UserLocation, LocationPermission } from "@/types";
 import { requestLocationPermission } from '../utils/permissions';
 
 export const useLocation = () => {

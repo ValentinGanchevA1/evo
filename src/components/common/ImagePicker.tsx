@@ -17,31 +17,27 @@ interface ImagePickerProps {
   style?: ViewStyle;
 }
 
-export const ImagePicker: ({ value, onSelect, style }: { value: any; onSelect: any; style: any }) => void = ({ value, onSelect, style }) => {
-    const imagePickerOptions: ImageLibraryOptions = {
+export const ImagePicker: React.FC<ImagePickerProps> = ({ value, onSelect, style }) => {
+  const handleSelectImage = () => {
+    const options: ImageLibraryOptions = {
       mediaType: 'photo',
       quality: 0.7,
       maxWidth: 1024,
       maxHeight: 1024,
     };
 
-
-    const onImagePickerResponse = (response: any) => {
+    launchImageLibrary(options, (response) => {
       if (response.didCancel) {
-        console.log('User cancelled image picker'); // optional user feedback
+        console.log('User cancelled image picker');
       } else if (response.errorCode) {
         Alert.alert('Error', response.errorMessage || 'Could not select image.');
       } else if (response.assets && response.assets[0].uri) {
         onSelect(response.assets[0].uri);
       }
-    };
+    }).then(r => console.log(r) );
+  };
 
-    const handleSelectImage = () => {
-      launchImageLibrary(imagePickerOptions, onImagePickerResponse);
-    };
-
-
-    return (
+  return (
     <TouchableOpacity onPress={handleSelectImage} style={[styles.container, style]}>
       {value ? (
         <Image source={{ uri: value }} style={styles.image} />

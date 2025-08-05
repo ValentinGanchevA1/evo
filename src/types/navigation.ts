@@ -9,6 +9,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  Splash: undefined;
+  Onboarding: undefined;
+  Welcome: undefined;
+  TermsOfService: undefined;
+  PrivacyPolicy: undefined;
 };
 
 /**
@@ -20,6 +25,11 @@ export type AuthStackParamList = {
   PhoneLogin: undefined;
   Verification: { phoneNumber: string };
   ProfileSetup: undefined;
+  Signup: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: undefined;
+  TermsOfService: undefined;
+  PrivacyPolicy: undefined;
 };
 
 /**

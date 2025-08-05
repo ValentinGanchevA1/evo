@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { LocationState, UserLocation, NearbyUser } from "@/types";
 import { locationService } from "@/services/locationService";
+import { RootState } from '@/store/store';
 
 const initialState: LocationState = {
   currentLocation: null,
@@ -11,104 +12,129 @@ const initialState: LocationState = {
   error: null,
 };
 
-// Async thunks
-export const updateLocationOnServer = createAsyncThunk(
+/**
+ * GEN: Standardized thunk configuration for consistent type safety.
+ */
+type LocationThunkConfig = {
+  state: RootState;
+  rejectValue: string;
+};
+
+// =================================================================
+// Thunks
+// =================================================================
+
+// FIX: Corrected the service method call and return type.
+export const updateLocationOnServer = createAsyncThunk<
+  Omit<UserLocation, 'id' | 'userId'>,
+  Omit<UserLocation, 'id' | 'userId'>,
+  LocationThunkConfig
+>(
   'location/updateLocationOnServer',
-  async (location: Omit<UserLocation, 'id' | 'userId'>) => {
-    const response = await locationService.updateLocation(location);
-    return response.data;
-  }
+  async (location, { rejectWithValue }) => {
+    try {
+      await locationService.updateLocationOnServer(location);
+      return location; // Pass location through for potential optimistic updates
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to update location on server');
+    }
+  },
 );
 
-export const fetchNearbyUsers = createAsyncThunk(
+// FIX: Correctly handle the data returned from the service.
+export const fetchNearbyUsers = createAsyncThunk<
+  NearbyUser[],
+  { latitude: number; longitude: number; radius: number },
+  LocationThunkConfig
+>(
   'location/fetchNearbyUsers',
-  async (params: { latitude: number; longitude: number; radius: number }) => {
-    const response = await locationService.getNearbyUsers(params);
-    return response.data;
-  }
+  async (params, { rejectWithValue }) => {
+    try {
+      // The service now correctly returns the array directly.
+      return await locationService.getNearbyUsers(params);
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch nearby users');
+    }
+  },
 );
 
-export const startLocationTracking = createAsyncThunk(
+// REFACTOR: Clarified the purpose of this thunk is to initiate the watch process.
+export const startLocationTracking = createAsyncThunk<void, void, { dispatch: Function }>(
   'location/startLocationTracking',
-  async (_, { dispatch }) => {
-    await locationService.startTracking((location) => {
-      dispatch(updateLocation(location));
-      dispatch(updateLocationOnServer(location));
-    });
-    return true;
-  }
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      locationService.startTracking((location) => {
+        // 1. Update local state immediately for a responsive UI.
+        dispatch(updateCurrentLocation(location));
+        // 2. Send update to the server in the background.
+        dispatch(updateLocationOnServer(location));
+      });
+    } catch (error: any) {
+      return rejectWithValue('Could not start location tracking.');
+    }
+  },
+);
+
+// GEN: Create a thunk to properly stop the location service watcher.
+export const stopLocationTracking = createAsyncThunk<void, void, LocationThunkConfig>(
+  'location/stopLocationTracking',
+  async () => {
+    locationService.stopTracking();
+  },
 );
 
 const locationSlice = createSlice({
   name: 'location',
   initialState,
   reducers: {
-    updateLocation: (
+    // REFACTOR: Renamed for clarity and simplified to match state shape.
+    updateCurrentLocation: (
       state,
       action: PayloadAction<Omit<UserLocation, "id" | "userId">>
     ) => {
-      // Generate a unique location ID
-      const locationId = Date.now().toString();
-
-      // Construct new location object with current timestamp
-      const newLocation: UserLocation = {
-        id: locationId,
-        userId: "", // Will be set by middleware
-        ...action.payload
-      };
-
-      // Update the state with the new location and timestamp
-      state.currentLocation = newLocation;
+      state.currentLocation = action.payload;
       state.lastUpdate = new Date();
       state.error = null;
-    },
-    setTracking: (state, action: PayloadAction<boolean>) => {
-      state.isTracking = action.payload;
-    },
-    setNearbyUsers: (state, action: PayloadAction<NearbyUser[]>) => {
-      state.nearbyUsers = action.payload;
     },
     clearLocationError: (state) => {
       state.error = null;
     },
-    stopTracking: (state) => {
-      state.isTracking = false;
-      state.currentLocation = null;
-    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(updateLocationOnServer.pending, (state) => {
+      // Tracking Lifecycle
+      .addCase(startLocationTracking.pending, (state) => {
+        state.isTracking = true;
         state.error = null;
       })
-      .addCase(updateLocationOnServer.fulfilled, (state) => {
-        // Location updated successfully
+      .addCase(startLocationTracking.rejected, (state, action) => {
+        state.isTracking = false;
+        // FIX: Use action.payload for errors from rejectWithValue.
+        state.error = action.payload as string;
       })
-      .addCase(updateLocationOnServer.rejected, (state, action) => {
-        state.error = action.error.message || 'Failed to update location';
+      .addCase(stopLocationTracking.fulfilled, (state) => {
+        state.isTracking = false;
+        state.currentLocation = null;
       })
+      // Nearby Users Lifecycle
       .addCase(fetchNearbyUsers.fulfilled, (state, action) => {
         state.nearbyUsers = action.payload;
       })
       .addCase(fetchNearbyUsers.rejected, (state, action) => {
-        state.error = action.error.message || 'Failed to fetch nearby users';
+        state.error = action.payload as string;
       })
-      .addCase(startLocationTracking.fulfilled, (state) => {
-        state.isTracking = true;
-      })
-      .addCase(startLocationTracking.rejected, (state, action) => {
-        state.error = action.error.message || 'Failed to start location tracking';
-        state.isTracking = false;
+      // Server Update Lifecycle (for background syncs)
+      .addCase(updateLocationOnServer.rejected, (state, action) => {
+        // Note: We might not want to show a blocking error for a background sync failure.
+        console.warn('Background location sync failed:', action.payload);
+        state.error = action.payload as string;
       });
   },
 });
 
 export const {
-  updateLocation,
-  setTracking,
-  setNearbyUsers,
+  updateCurrentLocation,
   clearLocationError,
-  stopTracking,
 } = locationSlice.actions;
 
 export default locationSlice.reducer;

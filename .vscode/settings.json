@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
         "persistor"
-    ]
+    ],
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "CodeGPT.apiKey": "CodeGPT Plus Beta"
 }

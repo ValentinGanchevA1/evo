@@ -1,4 +1,4 @@
-// src/types/index.ts - FIXED VERSION
+// src/types/index.ts - CLEANED AND CONSOLIDATED VERSION
 // =================================================================
 // Core Data Models
 // =================================================================
@@ -42,36 +42,12 @@ export interface LocationPermission {
 }
 
 // =================================================================
-// API & Auth Types - CONSOLIDATED
+// API & Auth Types
 // =================================================================
 
 export interface LoginCredentials {
   phoneNumber: string;
-  verificationCode: string; // Made required for consistency
-}
-
-export interface SignupData {
-  phoneNumber: string;
-  displayName: string;
-  dateOfBirth: Date;
-}
-// src/types/index.ts - FIXED VERSION
-// =================================================================
-// Core Data Models
-// =================================================================
-
-export interface LocationPermission {
-  granted: boolean;
-  type: 'whenInUse' | 'always' | 'denied';
-}
-
-// =================================================================
-// API & Auth Types - CONSOLIDATED
-// =================================================================
-
-export interface LoginCredentials {
-  phoneNumber: string;
-  verificationCode: string; // Made required for consistency
+  verificationCode: string;
 }
 
 export interface SignupData {
@@ -86,11 +62,10 @@ export interface RegistrationData {
   password: string;
 }
 
-// FIXED: Single consistent auth response interface
 export interface AuthResponse {
   user: User;
   token: string;
-  isNewUser: boolean; // Added missing property
+  isNewUser: boolean;
 }
 
 // =================================================================
@@ -105,9 +80,10 @@ export interface AuthState {
   error: string | null;
 }
 
+// FIXED: Consistent naming with User type
 export interface NearbyUser {
   id: string;
-  displayName: string; // Changed from username for consistency
+  displayName: string; // Changed from username
   latitude: number;
   longitude: number;
   distance: number;
@@ -124,6 +100,27 @@ export interface LocationState {
 }
 
 // =================================================================
-// Navigation Types - Import from separate file
+// Component Props Types
+// =================================================================
+
+export interface ButtonProps {
+  title: string;
+  onPress: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'outline';
+}
+
+export interface InputProps {
+  label?: string;
+  placeholder?: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  error?: string;
+  required?: boolean;
+}
+
+// =================================================================
+// Navigation Types - Re-export from navigation file
 // =================================================================
 export * from './navigation';

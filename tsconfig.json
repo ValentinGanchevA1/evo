@@ -1,25 +1,22 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "@tsconfig/react-native/tsconfig.json",
   "compilerOptions": {
-    "target": "es2017",
-    "lib": ["es2017", "es2018", "es5", "dom", "ESNext"],
+    "target": "ES2021",
+    "lib": ["ES2021"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "nodenext",
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
     "declaration": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "jsx": "react-jsx",
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"],
@@ -30,22 +27,29 @@
       "@/types/*": ["types/*"],
       "@/utils/*": ["utils/*"],
       "@/hooks/*": ["hooks/*"],
+      "@/config/*": ["config/*"],
       "@/navigation/*": ["navigation/*"]
-    }
+    },
+    "types": ["react-native", "jest"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
     "src/**/*",
-    "**/*.ts",
-    "**/*.tsx",
-    "index.js"
+    "App.tsx",
+    "index.js",
+    ".eslintrc.js",
+    "metro.config.js"
   ],
   "exclude": [
     "node_modules",
     "babel.config.js",
     "metro.config.js",
-    "jest.config.js",
-    "__tests__",
-    "android",
-    "ios"
+    ".buckconfig",
+    ".flowconfig",
+    ".gitattributes",
+    ".gitignore",
+    ".watchmanconfig",
+    "android/",
+    "ios/"
   ]
 }
